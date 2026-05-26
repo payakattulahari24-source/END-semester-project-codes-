@@ -1,0 +1,282 @@
+#include <Arduino.h>
+
+#define BTN_FWD 4
+#define BTN_REV 5
+#define BTN_EMG 27
+
+#define IN1 2
+#define IN2 15
+
+volatile int direction=0;
+volatile bool emergency=false;
+
+
+
+//============== INPUT TASK ==============
+void InputTask(void *pv){
+
+while(1){
+
+if(digitalRead(BTN_FWD)==LOW){
+
+delay(80);
+
+unsigned long trigger=millis();
+
+unsigned long start=millis();
+
+vTaskDelay(30);
+
+unsigned long stop=millis();
+
+direction=1;
+
+Serial.println("\n===== EDF INPUT TASK =====");
+
+Serial.print("Execution(ms): ");
+Serial.println(stop-start);
+
+Serial.print("Response(ms): ");
+Serial.println(stop-trigger);
+
+Serial.println("Deadline : 100");
+
+Serial.println("Dynamic Priority");
+
+Serial.println("Command : FORWARD");
+
+while(digitalRead(BTN_FWD)==LOW);
+
+}
+
+
+
+if(digitalRead(BTN_REV)==LOW){
+
+delay(80);
+
+unsigned long trigger=millis();
+
+unsigned long start=millis();
+
+vTaskDelay(30);
+
+unsigned long stop=millis();
+
+direction=2;
+
+Serial.println("\n===== EDF INPUT TASK =====");
+
+Serial.print("Execution(ms): ");
+Serial.println(stop-start);
+
+Serial.print("Response(ms): ");
+Serial.println(stop-trigger);
+
+Serial.println("Deadline : 100");
+
+Serial.println("Dynamic Priority");
+
+Serial.println("Command : REVERSE");
+
+while(digitalRead(BTN_REV)==LOW);
+
+}
+
+vTaskDelay(20);
+
+}
+
+}
+
+
+
+//============== CONTROL ==============
+void ControlTask(void *pv){
+
+while(1){
+
+if(direction!=0){
+
+unsigned long trigger=millis();
+
+unsigned long start=millis();
+
+if(direction==1){
+
+digitalWrite(IN1,HIGH);
+digitalWrite(IN2,LOW);
+
+}
+
+else{
+
+digitalWrite(IN1,LOW);
+digitalWrite(IN2,HIGH);
+
+}
+
+bool interrupted=false;
+
+for(int i=0;i<30;i++){
+
+if(emergency){
+
+interrupted=true;
+
+break;
+
+}
+
+vTaskDelay(100);
+
+}
+
+unsigned long stop=millis();
+
+Serial.println();
+
+if(direction==1)
+Serial.println("===== EDF FORWARD TASK =====");
+
+else
+Serial.println("===== EDF REVERSE TASK =====");
+
+Serial.print("Execution(ms): ");
+Serial.println(stop-start);
+
+Serial.print("Response(ms): ");
+Serial.println(stop-trigger);
+
+Serial.println("Deadline : 3000");
+
+Serial.println("Dynamic Priority");
+
+if(interrupted){
+
+Serial.println("TASK INTERRUPTED");
+
+}
+
+else{
+
+if(direction==1)
+Serial.println("Motor : FORWARD");
+
+else
+Serial.println("Motor : REVERSE");
+
+}
+
+direction=0;
+
+}
+
+vTaskDelay(10);
+
+}
+
+}
+
+
+
+//============== EMERGENCY ==============
+void EmergencyTask(void *pv){
+
+while(1){
+
+if(digitalRead(BTN_EMG)==LOW){
+
+delay(30);
+
+unsigned long trigger=millis();
+
+unsigned long start=millis();
+
+emergency=true;
+
+digitalWrite(IN1,LOW);
+
+digitalWrite(IN2,LOW);
+
+vTaskDelay(5);
+
+unsigned long stop=millis();
+
+Serial.println("\n===== EDF EMERGENCY TASK =====");
+
+Serial.print("Execution(ms): ");
+Serial.println(stop-start);
+
+Serial.print("Response(ms): ");
+Serial.println(stop-trigger);
+
+Serial.println("Deadline : 20");
+
+Serial.println("Dynamic Priority");
+
+Serial.println("Motor : STOPPED");
+
+direction=0;
+
+while(digitalRead(BTN_EMG)==LOW);
+
+emergency=false;
+
+}
+
+vTaskDelay(5);
+
+}
+
+}
+
+
+
+void setup(){
+
+Serial.begin(115200);
+
+pinMode(BTN_FWD,INPUT_PULLUP);
+pinMode(BTN_REV,INPUT_PULLUP);
+pinMode(BTN_EMG,INPUT_PULLUP);
+
+pinMode(IN1,OUTPUT);
+pinMode(IN2,OUTPUT);
+
+digitalWrite(IN1,LOW);
+digitalWrite(IN2,LOW);
+
+
+xTaskCreate(
+InputTask,
+"INPUT",
+3000,
+NULL,
+2,
+NULL
+);
+
+xTaskCreate(
+ControlTask,
+"CONTROL",
+3000,
+NULL,
+2,
+NULL
+);
+
+xTaskCreate(
+EmergencyTask,
+"EMERGENCY",
+3000,
+NULL,
+2,
+NULL
+);
+
+Serial.println("===== EDF READY =====");
+
+}
+
+void loop(){}
