@@ -1,0 +1,215 @@
+#include <Arduino.h>
+
+#define BTN_FWD 4
+#define BTN_REV 5
+#define BTN_EMG 27
+
+#define IN1 2
+#define IN2 15
+
+void setup() {
+
+Serial.begin(115200);
+
+pinMode(BTN_FWD, INPUT_PULLUP);
+pinMode(BTN_REV, INPUT_PULLUP);
+pinMode(BTN_EMG, INPUT_PULLUP);
+
+pinMode(IN1, OUTPUT);
+pinMode(IN2, OUTPUT);
+
+digitalWrite(IN1, LOW);
+digitalWrite(IN2, LOW);
+
+Serial.println("\n===== BAREMETAL READY =====");
+}
+
+void loop() {
+
+//================ FORWARD =================
+
+if(digitalRead(BTN_FWD)==LOW){
+
+delay(100);
+
+if(digitalRead(BTN_FWD)==LOW){
+
+unsigned long trigger=millis();
+
+Serial.println("\nFORWARD BUTTON");
+
+unsigned long start=millis();
+
+digitalWrite(IN1,HIGH);
+digitalWrite(IN2,LOW);
+
+Serial.println("Motor Started");
+
+delay(3000);
+
+unsigned long stop=millis();
+
+unsigned long execution=
+stop-start;
+
+unsigned long response=
+stop-trigger;
+
+unsigned long latency=
+start-trigger;
+
+Serial.println("TASK COMPLETED");
+
+Serial.print("Trigger(ms): ");
+Serial.println(trigger);
+
+Serial.print("Start(ms): ");
+Serial.println(start);
+
+Serial.print("Stop(ms): ");
+Serial.println(stop);
+
+Serial.print("Execution(ms): ");
+Serial.println(execution);
+
+Serial.print("Response(ms): ");
+Serial.println(response);
+
+Serial.print("Latency(ms): ");
+Serial.println(latency);
+
+Serial.println("Motor Status : FORWARD");
+
+while(digitalRead(BTN_FWD)==LOW);
+}
+}
+
+
+
+//================ REVERSE =================
+
+if(digitalRead(BTN_REV)==LOW){
+
+delay(100);
+
+if(digitalRead(BTN_REV)==LOW){
+
+unsigned long trigger=millis();
+
+Serial.println("\nREVERSE BUTTON");
+
+unsigned long start=millis();
+
+digitalWrite(IN1,LOW);
+digitalWrite(IN2,HIGH);
+
+Serial.println("Motor Started");
+
+delay(3000);
+
+unsigned long stop=millis();
+
+unsigned long execution=
+stop-start;
+
+unsigned long response=
+stop-trigger;
+
+unsigned long latency=
+start-trigger;
+
+Serial.println("TASK COMPLETED");
+
+Serial.print("Trigger(ms): ");
+Serial.println(trigger);
+
+Serial.print("Start(ms): ");
+Serial.println(start);
+
+Serial.print("Stop(ms): ");
+Serial.println(stop);
+
+Serial.print("Execution(ms): ");
+Serial.println(execution);
+
+Serial.print("Response(ms): ");
+Serial.println(response);
+
+Serial.print("Latency(ms): ");
+Serial.println(latency);
+
+Serial.println("Motor Status : REVERSE");
+
+while(digitalRead(BTN_REV)==LOW);
+}
+}
+
+
+
+//================ EMERGENCY =================
+
+if(digitalRead(BTN_EMG)==LOW){
+
+delay(100);
+
+if(digitalRead(BTN_EMG)==LOW){
+
+unsigned long trigger=millis();
+
+Serial.println("\nEMERGENCY BUTTON");
+
+Serial.println("Waiting...");
+
+// simulate delayed emergency scheduling
+
+delay(3000);
+
+// emergency actually starts now
+
+unsigned long start=millis();
+
+digitalWrite(IN1,LOW);
+digitalWrite(IN2,LOW);
+
+// actual stop execution
+
+delay(20);
+
+unsigned long stop=millis();
+
+unsigned long execution=
+stop-start;
+
+unsigned long response=
+stop-trigger;
+
+unsigned long latency=
+start-trigger;
+
+Serial.println("Motor Stopped");
+
+Serial.print("Trigger(ms): ");
+Serial.println(trigger);
+
+Serial.print("Start(ms): ");
+Serial.println(start);
+
+Serial.print("Stop(ms): ");
+Serial.println(stop);
+
+Serial.print("Execution(ms): ");
+Serial.println(execution);
+
+Serial.print("Response(ms): ");
+Serial.println(response);
+
+Serial.print("Latency(ms): ");
+Serial.println(latency);
+
+Serial.println("Motor Status : STOPPED");
+
+while(digitalRead(BTN_EMG)==LOW);
+}
+}
+
+}
